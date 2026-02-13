@@ -49,8 +49,10 @@ public class RoomController : ControllerBase
     public async Task<IActionResult> DeleteRoom(int id)
     {
         var room = await _context.Rooms.FindAsync(id);
-        if(room == null) return NotFound();
-
+        if(room == null) 
+        {
+            return NotFound();
+        }
         _context.Rooms.Remove(room);
         await _context.SaveChangesAsync();
 

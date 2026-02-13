@@ -97,7 +97,7 @@ public class LoanRequestController : ControllerBase
 
         if( loan.Room != null)
         {
-            loan.Room.Status = "Dipakai";
+            loan.Room.Status = "Sedang dipakai";
         }
 
         await _context.SaveChangesAsync();
