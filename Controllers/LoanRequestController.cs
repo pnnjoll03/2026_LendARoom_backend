@@ -151,4 +151,13 @@ public class LoanRequestController : ControllerBase
 
         return Ok("Data peminjaman berhasil dihapus!");
     }
+
+    [HttpGet("user/{username}")]
+public async Task<ActionResult<IEnumerable<LoanRequest>>> GetUserLoanRequests(string username)
+{
+    return await _context.LoanRequests
+        .Include(l => l.Room) // Penting: Supaya data ruangan ikut terbawa
+        .Where(l => l.User != null && l.User.Username == username)
+        .ToListAsync();
+}
 }
