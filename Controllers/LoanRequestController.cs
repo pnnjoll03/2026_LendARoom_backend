@@ -20,6 +20,10 @@ public class LoanRequestController : ControllerBase
     [HttpPost("booking")]
     public async Task<IActionResult> CreateLoanRequest(CreateLoanRequestDto request)
     {
+        if(request.ReturnDate <= request.BorrowDate)
+        {
+            return BadRequest("Waktu selesai peminjaman harus lebih dari waktu mulai!");
+        }
         var user = await _context.Users.FirstOrDefaultAsync(u => u.NRP == request.NRP);
 
         if( user == null)
@@ -33,6 +37,7 @@ public class LoanRequestController : ControllerBase
             RoomId = request.RoomId,
             RequestDate = DateTime.Now,
             BorrowDate =  request.BorrowDate,
+            ReturnDate = request.ReturnDate,
             Description =   request.Description,
             Status = "Pending"
         };
@@ -59,7 +64,9 @@ public class LoanRequestController : ControllerBase
             Name = loan.User?.Username ?? "Unknown",
             RoomName = loan.Room?.Name ?? "Unknown",
             BorrowDate = loan.BorrowDate,
-            Description = loan.Description
+            ReturnDate = DateTime.Now,
+            Description = loan.Description,
+            Status = "Completed"
         };
 
         _context.LoanHistories.Add(history);
@@ -119,7 +126,13 @@ public class LoanRequestController : ControllerBase
             return BadRequest("Pengeditan hanya bisa dilakukan ketika status 'Pending'!");
         }
 
+        if(request.ReturnDate <= request.BorrowDate)
+        {
+            return BadRequest("Waktu selesai peminjaman harus lebih dari waktu mulai!");
+        }
+
         loan.BorrowDate = request.BorrowDate;
+        loan.ReturnDate = request.ReturnDate;
         loan.Description = request.Description;
 
         await _context.SaveChangesAsync();
@@ -153,11 +166,11 @@ public class LoanRequestController : ControllerBase
     }
 
     [HttpGet("user/{username}")]
-public async Task<ActionResult<IEnumerable<LoanRequest>>> GetUserLoanRequests(string username)
-{
-    return await _context.LoanRequests
-        .Include(l => l.Room) // Penting: Supaya data ruangan ikut terbawa
-        .Where(l => l.User != null && l.User.Username == username)
-        .ToListAsync();
-}
+    public async Task<ActionResult<IEnumerable<LoanRequest>>> GetUserLoanRequests(string username)
+    {
+        return await _context.LoanRequests
+            .Include(l => l.Room) // Penting: Supaya data ruangan ikut terbawa
+            .Where(l => l.User != null && l.User.Username == username)
+            .ToListAsync();
+    }
 }

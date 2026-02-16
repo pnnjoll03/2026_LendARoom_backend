@@ -55,7 +55,8 @@ public class AuthController : ControllerBase
         {
             Message = "Login berhasil!",
             Username = user.Username,
-            Role     = user.Role
+            Role     = user.Role,
+            NRP = user.NRP
         });
     }
 }
