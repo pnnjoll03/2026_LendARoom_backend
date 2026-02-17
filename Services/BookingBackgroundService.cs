@@ -39,7 +39,6 @@ public class BookingBackgroundService : BackgroundService
             }
             catch (Exception ex)
             {
-                // Logging error tapi loop tetap berjalan
                 Console.WriteLine($"[Error BackgroundService]: {ex.Message}");
             }
 
