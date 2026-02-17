@@ -16,28 +16,33 @@ public class BookingBackgroundService : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = _serviceProvider.CreateScope())
+            try 
             {
-                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                // Cari booking "Approved" yang sudah melewati waktu ReturnDate
-                var expiredBookings = await context.LoanRequests
-                    .Where(b => b.Status == "Approved" && b.ReturnDate <= DateTime.Now)
-                    .ToListAsync();
-
-                if (expiredBookings.Any())
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    foreach (var booking in expiredBookings)
+                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var expiredBookings = await context.LoanRequests
+                        .Where(b => b.Status == "Approved" && b.ReturnDate <= DateTime.Now)
+                        .ToListAsync();
+
+                    if (expiredBookings.Any())
                     {
-                        booking.Status = "Completed";
-                        
-                        // Opsional: Update status ruangan kembali menjadi "Tersedia"
-                        var room = await context.Rooms.FindAsync(booking.RoomId);
-                        if (room != null) room.Status = "Tersedia";
+                        foreach (var booking in expiredBookings)
+                        {
+                            booking.Status = "Completed";
+                            var room = await context.Rooms.FindAsync(booking.RoomId);
+                            if (room != null) room.Status = "Tersedia";
+                        }
+                        await context.SaveChangesAsync();
                     }
-                    await context.SaveChangesAsync();
                 }
             }
+            catch (Exception ex)
+            {
+                // Logging error tapi loop tetap berjalan
+                Console.WriteLine($"[Error BackgroundService]: {ex.Message}");
+            }
+
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
